@@ -1,6 +1,23 @@
 cmake_minimum_required(VERSION 3.9.2)
-project(allocator)
 
-set(CMAKE_CXX_STANDARD 17)
+if("$ENV{TRAVIS_BUILD_NUMBER}" STREQUAL "")
+    set(ALLOCATOR_NUMBER "0")
+else()
+    set(ALLOCATOR_NUMBER "$ENV{TRAVIS_BUILD_NUMBER}")
+endif()
 
-add_executable(allocator main.cpp)
+project(all-o-cator VERSION 0.0.${ALLOCATOR_NUMBER})
+
+set(CMAKE_CXX_STANDARD 14)
+
+add_executable(all-o-cator all-o-cator.cpp)
+
+set(CPACK_GENERATOR DEB)
+
+set(CPACK_PACKAGE_VERSION_MAJOR "${PROJECT_VERSION_MAJOR}")
+set(CPACK_PACKAGE_VERSION_MINOR "${PROJECT_VERSION_MINOR}")
+set(CPACK_PACKAGE_VERSION_PATCH "${PROJECT_VERSION_PATCH}")
+
+set(CPACK_PACKAGE_CONTACT dikama2013@yandex.ru)
+
+include(CPack)

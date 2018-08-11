@@ -81,7 +81,7 @@ int main() {
         stlMap.emplace(i, ns::fac(i));
     }
 
-    std::map<int, int, std::less<int>, ns::Preallocate<10>::SomeAllocator<std::pair<const int, int>>> myMap;
+    std::map<int, int, std::less<>, ns::Preallocate<10>::SomeAllocator<std::pair<const int, int>>> myMap;
 
     for (int i = 0; i < 10; ++i) {
         myMap.emplace(i, ns::fac(i));
