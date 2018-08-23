@@ -18,7 +18,20 @@ namespace ns {
         private:
             T* block = nullptr;
             size_t offset = 0;
-            
+
+            T* allocateIn(std::size_t n) {
+                auto p1 = std::malloc(n * sizeof(T));
+                if (!p1) {
+                    throw std::bad_alloc();
+                }
+                block = reinterpret_cast<T*>(p1);
+                return block;
+            }
+
+            void deallocateOut(T* p1, std::size_t n) {
+                std::free(p1);
+            }
+
         public:
             using value_type = T;
 
@@ -41,24 +54,14 @@ namespace ns {
 
             T* allocate(std::size_t n) {
                 T* res = block + offset;
-                offset++;
+                offset += n;
+                if (offset > 10) {
+                    throw std::bad_alloc();
+                }
                 return res;
             }
 
-            T* allocateIn(std::size_t n) {
-                auto p1 = std::malloc(n * sizeof(T));
-                if (!p1) {
-                    throw std::bad_alloc();
-                }
-                block = reinterpret_cast<T*>(p1);
-                return block;
-            }
-
             void deallocate(T* p1, std::size_t n) {}
-
-            void deallocateOut(T* p1, std::size_t n) {
-                std::free(p1);
-            }
 
             template <typename U, typename ...Args>
             void construct(U* p1, Args&& ...args) {
@@ -71,8 +74,37 @@ namespace ns {
         };
     };
 
-}
+    template<typename T, typename Alloc = std::allocator<T>>
+    class MyVector {
+    private:
+        Alloc allocator;
+        int i = 0;
+        T* ptr = nullptr;
 
+    public:
+        MyVector() {
+            ptr = allocator.allocate(10);
+        }
+
+        T* begin() {
+            return ptr;
+        }
+
+        T* end() {
+            return (ptr + i);
+        }
+
+        virtual ~MyVector() {
+            allocator.deallocate(ptr, 10);
+        }
+
+        void push_back(T t) {
+            *(ptr + i) = t;
+            i++;
+        }
+    };
+
+}
 
 int main() {
     std::map<const int, int> stlMap;
@@ -91,18 +123,21 @@ int main() {
         std::cout << item.first << ' ' << item.second << std::endl;
     }
 
-    std::vector<int> stlVector;
-    stlVector.reserve(10);
+    ns::MyVector<int> myVectorStlAllocator;
 
     for (int i = 0; i < 10; ++i) {
-        stlVector.emplace_back(i);
+        myVectorStlAllocator.push_back(i);
     }
 
-    std::vector<int, ns::Preallocate<10>::SomeAllocator<int>> myVector;
-    myVector.reserve(10);
+    for (auto v : myVectorStlAllocator) {
+        std::cout << v << ' ';
+    }
+    std::cout << std::endl;
+
+    ns::MyVector<int, ns::Preallocate<10>::SomeAllocator<int>> myVector;
 
     for (int i = 0; i < 10; ++i) {
-        myVector.emplace_back(i);
+        myVector.push_back(i);
     }
 
     for (auto v : myVector) {
